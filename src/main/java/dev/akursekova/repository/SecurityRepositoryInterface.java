@@ -9,5 +9,5 @@ public interface SecurityRepositoryInterface {
 
     Security getSecurity(Long id) throws SecurityNotExistException;
 
-    boolean exists(Security security);
+//    boolean exists(Security security); //todo investigate
 }

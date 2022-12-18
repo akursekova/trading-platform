@@ -3,12 +3,11 @@ package dev.akursekova.servlet;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akursekova.entities.Order;
-import dev.akursekova.entities.OrderType;
 import dev.akursekova.exception.OrderCreationException;
-import dev.akursekova.repository.OrderRepository;
+import dev.akursekova.exception.OrderNotExistException;
 import dev.akursekova.repository.OrderRepositoryInterface;
 import dev.akursekova.repository.UserRepositoryInterface;
-import dev.akursekova.service.TradingService;
+import dev.akursekova.service.TradeService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -30,18 +29,20 @@ public class OrderServlet extends HttpServlet {
 //    private OrderRepositoryInterface buyOrdersRepository = null;
 //    private OrderRepositoryInterface sellOrdersRepository = null;
 
-    private OrderRepositoryInterface ordersRepository = null;
-    private UserRepositoryInterface userRepository = null;
+    private OrderRepositoryInterface ordersRepository;
+    private UserRepositoryInterface userRepository;
+    private TradeService tradeService;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         ServletContext context = config.getServletContext();
-//        buyOrdersRepository = (OrderRepositoryInterface) context.getAttribute("buyOrdersRepository");
-//        sellOrdersRepository = (OrderRepositoryInterface) context.getAttribute("sellOrdersRepository");
+
         ordersRepository = (OrderRepositoryInterface) context.getAttribute("ordersRepository");
         userRepository = (UserRepositoryInterface) context.getAttribute("userRepository");
+        tradeService = (TradeService) context.getAttribute("tradeService");
     }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         super.doPost(request, response);
@@ -49,9 +50,9 @@ public class OrderServlet extends HttpServlet {
         StringBuilder body = new StringBuilder();
         char[] buffer = new char[1024];
         int readChars;
-        try(Reader reader = request.getReader()){
-            while ((readChars=reader.read(buffer))!=-1){
-                body.append(buffer,0, readChars);
+        try (Reader reader = request.getReader()) {
+            while ((readChars = reader.read(buffer)) != -1) {
+                body.append(buffer, 0, readChars);
             }
         }
 
@@ -61,17 +62,11 @@ public class OrderServlet extends HttpServlet {
         mapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
         Order order = mapper.readValue(orderStr, Order.class);
 
-//TradingSersice.trade();
-
-
-
-
         try {
-            //trandingService.trade(order);
             ordersRepository.addOrder(order);
-            TradingService.trade(order, (OrderRepository) ordersRepository);
+            tradeService.trade(order);
             response.setStatus(202);
-        } catch(OrderCreationException ex) {
+        } catch (OrderCreationException ex) {
             String json = "{\n";
             json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
             json += "}";
@@ -79,16 +74,44 @@ public class OrderServlet extends HttpServlet {
             response.getWriter().println(json);
             System.out.println(json); // TODO testing purpose, remove it later
         }
+    }
 
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        super.doGet(request, response);
+
+        Long orderId = Long.parseLong(request.getPathInfo().substring(1));
+
+        try {
+            Order order = ordersRepository.getOrder(orderId);
+            response.setStatus(202);
+            String json = "{\n";
+            json += "\"id\": " + JSONObject.quote(String.valueOf(order.getId())) + ",\n";
+            json += "\"userId\": " + JSONObject.quote(String.valueOf(order.getUserId())) + ",\n";
+            json += "\"securityId\": " + JSONObject.quote(String.valueOf(order.getSecurityId())) + ",\n";
+            json += "\"type\": " + JSONObject.quote(String.valueOf(order.getType())) + ",\n";
+            json += "\"price\": " + JSONObject.quote(String.valueOf(order.getPrice())) + ",\n";
+            json += "\"quantity\": " + JSONObject.quote(String.valueOf(order.getQuantity())) + ",\n";
+            json += "\"fulfilled\": " + JSONObject.quote(String.valueOf(order.getFulfilled())) + "\n";
+            json += "}";
+            System.out.println(json); // todo testing purposes
+        } catch (OrderNotExistException ex) {
+            String json = "{\n";
+            json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
+            json += "}";
+            response.setStatus(400);
+            response.getWriter().println(json);
+            System.out.println(json);
+        }
     }
 }
 
-// todo doGet TBD
+
 
 
 /*
-* new order: {domain}/orders
-* new user: {domain}/users
-* new security: {domain}/securities
-* trade: POST?
-* */
+ * new order: {domain}/orders
+ * new user: {domain}/users
+ * new security: {domain}/securities
+ * trade: POST?
+ * */

@@ -9,5 +9,5 @@ public interface UserRepositoryInterface {
 
     User getUser(Long id) throws UserNotExistException;
 
-    boolean exists(User user);
+//    boolean exists(User user); //todo investigate
 }

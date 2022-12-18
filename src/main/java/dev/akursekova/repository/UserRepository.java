@@ -15,8 +15,13 @@ public class UserRepository implements UserRepositoryInterface {
 
     private static final Logger LOG = LogManager.getLogger(UserRepository.class);
 
+    protected Map<Long, User> users;
+
     private static AtomicLong userId = new AtomicLong(0L);
-    private Map<Long, User> users = new HashMap<>();
+
+    public UserRepository(Map<Long, User> users){
+        this.users = users;
+    }
 
     @Override
     public void addUser(User user) throws UserCreationException {
@@ -47,8 +52,8 @@ public class UserRepository implements UserRepositoryInterface {
         return users.get(id);
     }
 
-    @Override
-    public boolean exists(User user) {
+//    @Override //todo investigate
+    private boolean exists(User user) {
         return !users.values()
                 .stream()
                 .filter(u -> u.getUsername().equals(user.getUsername()))

@@ -1,5 +1,8 @@
 package dev.akursekova.entities;
 
+import lombok.Data;
+
+@Data
 public class Trade {
     private long id;
     private long sellOrderId;
@@ -7,44 +10,10 @@ public class Trade {
     private int price;
     private int quantity;
 
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public long getSellOrderId() {
-        return sellOrderId;
-    }
-
-    public void setSellOrderId(long sellOrderId) {
+    public Trade(long sellOrderId, long buyOrderId, int price, int quantity) {
         this.sellOrderId = sellOrderId;
-    }
-
-    public long getBuyOrderId() {
-        return buyOrderId;
-    }
-
-    public void setBuyOrderId(long buyOrderId) {
         this.buyOrderId = buyOrderId;
-    }
-
-    public int getPrice() {
-        return price;
-    }
-
-    public void setPrice(int price) {
         this.price = price;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
-
 }

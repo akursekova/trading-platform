@@ -1,6 +1,7 @@
 package dev.akursekova.repository;
 
 import dev.akursekova.entities.Security;
+import dev.akursekova.entities.User;
 import dev.akursekova.exception.SecurityCreationException;
 import dev.akursekova.exception.SecurityNotExistException;
 import dev.akursekova.exception.UserNotExistException;
@@ -15,8 +16,14 @@ import java.util.concurrent.atomic.AtomicLong;
 public class SecurityRepository implements SecurityRepositoryInterface {
 
     private static final Logger LOG = LogManager.getLogger(SecurityRepository.class);
+
+    protected Map<Long, Security> securities;
     private static AtomicLong securityId = new AtomicLong(0L);
-    private Map<Long, Security> securities = new HashMap<>();
+    //public Map<Long, Security> securities = new HashMap<>();
+
+    public SecurityRepository(Map<Long, Security> securities){
+        this.securities = securities;
+    }
 
 
     @Override
@@ -45,9 +52,14 @@ public class SecurityRepository implements SecurityRepositoryInterface {
         return securities.get(id);
     }
 
-    @Override
-    public boolean exists(Security security){
-        return !securities.values().stream().filter(s -> s.getName().equals(security.getName())).findFirst().equals(Optional.empty());
+//    @Override //todo investigate
+    private boolean exists(Security security){
+        return !securities
+                .values()
+                .stream()
+                .filter(s -> s.getName().equals(security.getName()))
+                .findFirst()
+                .equals(Optional.empty());
     }
 
 }
