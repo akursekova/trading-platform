@@ -6,7 +6,6 @@ import dev.akursekova.entities.Order;
 import dev.akursekova.exception.OrderCreationException;
 import dev.akursekova.exception.OrderNotExistException;
 import dev.akursekova.repository.OrderRepositoryInterface;
-import dev.akursekova.repository.UserRepositoryInterface;
 import dev.akursekova.service.TradeService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,11 +25,8 @@ import java.io.Reader;
 public class OrderServlet extends HttpServlet {
     private static final Logger LOG = LogManager.getLogger(OrderServlet.class);
 
-//    private OrderRepositoryInterface buyOrdersRepository = null;
-//    private OrderRepositoryInterface sellOrdersRepository = null;
-
-    private OrderRepositoryInterface ordersRepository;
-    private UserRepositoryInterface userRepository;
+    private OrderRepositoryInterface orderRepository;
+    //private UserRepositoryInterface userRepository;
     private TradeService tradeService;
 
     @Override
@@ -38,14 +34,13 @@ public class OrderServlet extends HttpServlet {
         super.init(config);
         ServletContext context = config.getServletContext();
 
-        ordersRepository = (OrderRepositoryInterface) context.getAttribute("ordersRepository");
-        userRepository = (UserRepositoryInterface) context.getAttribute("userRepository");
+        orderRepository = (OrderRepositoryInterface) context.getAttribute("orderRepository");
+        //userRepository = (UserRepositoryInterface) context.getAttribute("userRepository");
         tradeService = (TradeService) context.getAttribute("tradeService");
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        super.doPost(request, response);
 
         StringBuilder body = new StringBuilder();
         char[] buffer = new char[1024];
@@ -63,7 +58,7 @@ public class OrderServlet extends HttpServlet {
         Order order = mapper.readValue(orderStr, Order.class);
 
         try {
-            ordersRepository.addOrder(order);
+            orderRepository.addOrder(order);
             tradeService.trade(order);
             response.setStatus(202);
         } catch (OrderCreationException ex) {
@@ -83,7 +78,7 @@ public class OrderServlet extends HttpServlet {
         Long orderId = Long.parseLong(request.getPathInfo().substring(1));
 
         try {
-            Order order = ordersRepository.getOrder(orderId);
+            Order order = orderRepository.getOrder(orderId);
             response.setStatus(202);
             String json = "{\n";
             json += "\"id\": " + JSONObject.quote(String.valueOf(order.getId())) + ",\n";

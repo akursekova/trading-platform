@@ -25,11 +25,11 @@ public class TradeRepository implements TradeRepositoryInterface {
 
 
     @Override
-    public void addTrade(Trade trade) {
-//        if (trade.getBuyOrderId() == trade.getSellOrderId()){
-//            LOG.error("Trade cannot be created: sellOrderId is equal to buyOrderId");
-//            throw new TradeCreationException("sellOrderId cannot be equal to buyOrderId");
-//        }
+    public void addTrade(Trade trade) throws TradeCreationException {
+        if (trade.getBuyOrderId() == trade.getSellOrderId()){
+            LOG.error("Trade cannot be created: sellOrderId is equal to buyOrderId");
+            throw new TradeCreationException("sellOrderId cannot be equal to buyOrderId");
+        }
         trade.setId(tradeId.incrementAndGet());
         trades.put(trade.getId(), trade);
         LOG.debug("New trade has been added to the trade repository. Trade = " + trade.toString());

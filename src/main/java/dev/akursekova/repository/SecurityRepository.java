@@ -1,10 +1,8 @@
 package dev.akursekova.repository;
 
 import dev.akursekova.entities.Security;
-import dev.akursekova.entities.User;
 import dev.akursekova.exception.SecurityCreationException;
 import dev.akursekova.exception.SecurityNotExistException;
-import dev.akursekova.exception.UserNotExistException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,7 +17,6 @@ public class SecurityRepository implements SecurityRepositoryInterface {
 
     protected Map<Long, Security> securities;
     private static AtomicLong securityId = new AtomicLong(0L);
-    //public Map<Long, Security> securities = new HashMap<>();
 
     public SecurityRepository(Map<Long, Security> securities){
         this.securities = securities;

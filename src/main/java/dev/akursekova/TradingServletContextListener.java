@@ -30,8 +30,8 @@ public class TradingServletContextListener implements ServletContextListener {
         LOG.info("securityRepository has been created: " + securityRepository);
 
         OrderRepositoryInterface orderRepository = new OrderRepository(new HashMap<>());
-        context.setAttribute("ordersRepository", orderRepository);
-        LOG.info("ordersRepository has been created: " + orderRepository);
+        context.setAttribute("orderRepository", orderRepository);
+        LOG.info("orderRepository has been created: " + orderRepository);
 
 
         TradeRepositoryInterface tradeRepository = new TradeRepository(new HashMap<>());

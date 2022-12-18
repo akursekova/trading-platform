@@ -5,6 +5,7 @@ import dev.akursekova.entities.Order;
 import dev.akursekova.entities.OrderType;
 import dev.akursekova.entities.Trade;
 import dev.akursekova.repository.*;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,6 +24,7 @@ public class TradeService {
     }
 
 
+    @SneakyThrows
     public void trade(Order order) {
         if (order.getType().equals(OrderType.BUY)) {
             Optional<Order> matchingSellOrder = orderRepository.getAllOrders().stream()

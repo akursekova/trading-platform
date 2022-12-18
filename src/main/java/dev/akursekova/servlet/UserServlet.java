@@ -25,7 +25,7 @@ import org.json.JSONObject;
 public class UserServlet extends HttpServlet {
     private static final Logger LOG = LogManager.getLogger(UserServlet.class);
 
-    private UserRepositoryInterface userRepository = null;
+    private UserRepositoryInterface userRepository;
 
 
     @Override

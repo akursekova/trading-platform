@@ -21,7 +21,7 @@ import java.io.IOException;
 public class TradeServlet extends HttpServlet {
     private static final Logger LOG = LogManager.getLogger(TradeServlet.class);
 
-    private TradeRepositoryInterface tradeRepository = null;
+    private TradeRepositoryInterface tradeRepository;
 
     @Override
     public void init(ServletConfig config) throws ServletException {

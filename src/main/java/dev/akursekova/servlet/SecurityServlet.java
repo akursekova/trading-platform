@@ -3,13 +3,9 @@ package dev.akursekova.servlet;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akursekova.entities.Security;
-import dev.akursekova.entities.User;
 import dev.akursekova.exception.SecurityCreationException;
 import dev.akursekova.exception.SecurityNotExistException;
-import dev.akursekova.exception.UserCreationException;
-import dev.akursekova.exception.UserNotExistException;
 import dev.akursekova.repository.SecurityRepositoryInterface;
-import dev.akursekova.repository.UserRepositoryInterface;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -28,7 +24,7 @@ import java.io.Reader;
 public class SecurityServlet extends HttpServlet {
     private static final Logger LOG = LogManager.getLogger(SecurityServlet.class);
 
-    private SecurityRepositoryInterface securityRepository = null;
+    private SecurityRepositoryInterface securityRepository;
 
 
     @Override
@@ -92,7 +88,5 @@ public class SecurityServlet extends HttpServlet {
             response.getWriter().println(json);
             System.out.println(json);
         }
-
-
     }
 }

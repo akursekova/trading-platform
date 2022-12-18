@@ -5,6 +5,7 @@ import dev.akursekova.entities.Security;
 import dev.akursekova.entities.Trade;
 import dev.akursekova.entities.User;
 import dev.akursekova.exception.SecurityNotExistException;
+import dev.akursekova.exception.TradeCreationException;
 import dev.akursekova.exception.TradeNotExistException;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +39,12 @@ class TradeRepositoryTest {
         trade.setId(1L);
         tradeRepository.addTrade(trade);
         assertEquals(3, tradeRepository.trades.size());
+    }
+
+    @Test
+    void test_addTrade_BuyOrderAndSellOrderHaveSameId_ShouldThrowTradeCreationException(){
+        Trade trade = new Trade(1L, 1L, 50, 100);
+        assertThrows(TradeCreationException.class, () -> tradeRepository.addTrade(trade));
     }
 
     @SneakyThrows
