@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "OrderServlet", value = "/orders/*")
 public class OrderServlet extends HttpServlet {
@@ -40,10 +41,9 @@ public class OrderServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String orderStr = request.getReader().lines().collect(Collectors.joining());
 
-        StringBuilder body = convert(request);
-        String orderStr = body.toString();
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
         Order order = mapper.readValue(orderStr, Order.class);
@@ -60,18 +60,6 @@ public class OrderServlet extends HttpServlet {
             response.getWriter().println(json);
             System.out.println(json); // TODO testing purpose, remove it later
         }
-    }
-
-    private static StringBuilder convert(HttpServletRequest request) throws IOException {
-        StringBuilder body = new StringBuilder();
-        char[] buffer = new char[1024];
-        int readChars;
-        try (Reader reader = request.getReader()) {
-            while ((readChars = reader.read(buffer)) != -1) {
-                body.append(buffer, 0, readChars);
-            }
-        }
-        return body;
     }
 
     @Override

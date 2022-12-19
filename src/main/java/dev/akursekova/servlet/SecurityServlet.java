@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "SecurityServlet", value = "/securities/*")
 public class SecurityServlet extends HttpServlet {
@@ -36,18 +37,8 @@ public class SecurityServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String orderStr = request.getReader().lines().collect(Collectors.joining());
 
-        StringBuilder body = new StringBuilder();
-        char[] buffer = new char[1024];
-        int readChars;
-        try (Reader reader = request.getReader()) {
-            while ((readChars = reader.read(buffer)) != -1) {
-                body.append(buffer, 0, readChars);
-            }
-        }
-
-
-        String orderStr = body.toString();
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
         Security security = mapper.readValue(orderStr, Security.class);
@@ -61,7 +52,7 @@ public class SecurityServlet extends HttpServlet {
             json += "}";
             response.setStatus(400);
             response.getWriter().println(json);
-            System.out.println(json);
+            System.out.println(json); // todo проверить выводится ли в консолько без этой строки
         }
     }
 

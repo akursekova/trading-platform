@@ -1,6 +1,10 @@
 package dev.akursekova.servlet;
 
+import dev.akursekova.entities.Order;
+import dev.akursekova.entities.OrderType;
 import dev.akursekova.entities.Security;
+import dev.akursekova.exception.OrderCreationException;
+import dev.akursekova.exception.SecurityCreationException;
 import dev.akursekova.exception.SecurityNotExistException;
 import dev.akursekova.repository.OrderRepository;
 import dev.akursekova.repository.SecurityRepository;
@@ -19,12 +23,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SecurityServletTest {
@@ -48,6 +53,53 @@ class SecurityServletTest {
 
         securityServlet = new SecurityServlet();
         securityServlet.init(servletConfig);
+    }
+
+    @Test
+    void test_doPost_SuccessfulSecurityCreation() throws SecurityCreationException, ServletException, IOException {
+        BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
+
+        Stream<String> str = "{\"name\":\"WSB\"}".lines();
+
+        Security security = new Security();
+        security.setName("WSB");
+
+        Mockito.when(request.getReader()).thenReturn(bufferedReader);
+        Mockito.when(bufferedReader.lines()).thenReturn(str);
+
+        securityServlet.doPost(request, response);
+
+        verify(securityRepository, times(1)).addSecurity(security);
+        verify(response, times(1)).setStatus(202);
+    }
+
+    @Test
+    void test_doPost_EmptyNameInRequest_ShouldThrowSecurityCreationException() throws ServletException, IOException, SecurityCreationException {
+        BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
+        PrintWriter printWriter = Mockito.mock(PrintWriter.class);
+
+        SecurityCreationException ex = new SecurityCreationException("empty security name");
+
+        Stream<String> str = "{\"name\":\"\"}".lines();
+
+        String json = "{\n";
+        json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
+        json += "}";
+
+        Security security = new Security();
+        security.setName("");
+
+        Mockito.when(request.getReader()).thenReturn(bufferedReader);
+        Mockito.when(bufferedReader.lines()).thenReturn(str);
+        Mockito.when(response.getWriter()).thenReturn(printWriter);
+        doThrow(ex).when(securityRepository).addSecurity(security);
+
+        securityServlet.doPost(request, response);
+
+        verify(securityRepository, times(1)).addSecurity(security);
+        assertThrows(SecurityCreationException.class, () -> securityRepository.addSecurity(security));
+        verify(response, times(1)).setStatus(400);
+        verify(printWriter, times(1)).println(json);
     }
 
     @Test

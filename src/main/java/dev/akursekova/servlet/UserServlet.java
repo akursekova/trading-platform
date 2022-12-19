@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.stream.Collectors;
 
 import org.json.JSONObject;
 
@@ -37,18 +38,8 @@ public class UserServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String orderStr = request.getReader().lines().collect(Collectors.joining());
 
-        StringBuilder body = new StringBuilder();
-        char[] buffer = new char[1024];
-        int readChars;
-        try (Reader reader = request.getReader()) {
-            while ((readChars = reader.read(buffer)) != -1) {
-                body.append(buffer, 0, readChars);
-            }
-        }
-
-
-        String orderStr = body.toString();
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
         User user = mapper.readValue(orderStr, User.class);

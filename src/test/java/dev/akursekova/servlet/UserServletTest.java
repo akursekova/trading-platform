@@ -2,7 +2,9 @@ package dev.akursekova.servlet;
 
 import dev.akursekova.entities.Security;
 import dev.akursekova.entities.User;
+import dev.akursekova.exception.SecurityCreationException;
 import dev.akursekova.exception.SecurityNotExistException;
+import dev.akursekova.exception.UserCreationException;
 import dev.akursekova.exception.UserNotExistException;
 import dev.akursekova.repository.OrderRepository;
 import dev.akursekova.repository.UserRepository;
@@ -21,12 +23,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServletTest {
@@ -51,6 +54,55 @@ class UserServletTest {
 
         userServlet = new UserServlet();
         userServlet.init(servletConfig);
+    }
+
+    @Test
+    void test_doPost_SuccessfulUserCreation() throws ServletException, IOException, UserCreationException {
+        BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
+
+        Stream<String> str = "{\"username\":\"testuser1\",\"password\":222}".lines();
+
+        User user = new User();
+        user.setUsername("testuser1");
+        user.setPassword(String.valueOf(222));
+
+        Mockito.when(request.getReader()).thenReturn(bufferedReader);
+        Mockito.when(bufferedReader.lines()).thenReturn(str);
+
+        userServlet.doPost(request, response);
+
+        verify(userRepository, times(1)).addUser(user);
+        verify(response, times(1)).setStatus(202);
+    }
+
+    @Test
+    void test_doPost_EmptyPasswordInRequest_ShouldThrowUserCreationException() throws IOException, UserCreationException, ServletException {
+        BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
+        PrintWriter printWriter = Mockito.mock(PrintWriter.class);
+
+        UserCreationException ex = new UserCreationException("empty password");
+
+        Stream<String> str = "{\"username\":\"testuser1\",\"password\":\"\"}".lines();
+
+        String json = "{\n";
+        json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
+        json += "}";
+
+        User user = new User();
+        user.setUsername("testuser1");
+        user.setPassword("");
+
+        Mockito.when(request.getReader()).thenReturn(bufferedReader);
+        Mockito.when(bufferedReader.lines()).thenReturn(str);
+        Mockito.when(response.getWriter()).thenReturn(printWriter);
+        doThrow(ex).when(userRepository).addUser(user);
+
+        userServlet.doPost(request, response);
+
+        verify(userRepository, times(1)).addUser(user);
+        assertThrows(UserCreationException.class, () -> userRepository.addUser(user));
+        verify(response, times(1)).setStatus(400);
+        verify(printWriter, times(1)).println(json);
     }
 
     @Test

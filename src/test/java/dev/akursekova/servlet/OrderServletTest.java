@@ -22,9 +22,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -56,34 +58,62 @@ class OrderServletTest {
         orderServlet.init(servletConfig);
     }
 
-//    @Test
-//    void test_doPost_SuccessfulOrderCreation() throws ServletException, IOException, OrderCreationException {
-//
-////        StringBuilder body = new StringBuilder();
-////        body.append("{\"userId\":1,\"securityId\":1,\"type\":\"sell\",\"price\":\"50\",\"quantity\":\"10\"}");
-////        String orderStr = body.toString();
-////        Mockito.when(body.toString()).thenReturn(orderStr);
-////Mockito.when(body.toString()).thenReturn(orderStr);
-//
-//
-////        char[] buffer = orderStr.toCharArray();
-////        Reader reader = Mockito.mock(Reader.class);
-////        int readChars = -1;
-////        Mockito.when(reader.read(buffer)).thenReturn(readChars);
-//
-//        Order order = new Order();
-//        order.setId(1);
-//        order.setSecurityId(1);
-//        order.setType(OrderType.SELL);
-//        order.setPrice(50);
-//        order.setQuantity(10);
-//
-//        orderServlet.doPost(request, response);
-//
-//        verify(orderRepository, times(1)).addOrder(order);
-//        verify(tradeService, times(1)).trade(order);
-//        verify(response, times(1)).setStatus(202);
-//    }
+    @Test
+    void test_doPost_SuccessfulOrderCreation() throws ServletException, IOException, OrderCreationException {
+        BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
+
+        Stream<String> str = "{\"userId\":1,\"securityId\":1,\"type\":\"sell\",\"price\":\"50\",\"quantity\":\"10\"}".lines();
+
+        Order order = new Order();
+        order.setUserId(1);
+        order.setSecurityId(1);
+        order.setType(OrderType.SELL);
+        order.setPrice(50);
+        order.setQuantity(10);
+
+
+        Mockito.when(request.getReader()).thenReturn(bufferedReader);
+        Mockito.when(bufferedReader.lines()).thenReturn(str);
+
+        orderServlet.doPost(request, response);
+
+        verify(orderRepository, times(1)).addOrder(order);
+        verify(tradeService, times(1)).trade(order);
+        verify(response, times(1)).setStatus(202);
+    }
+
+    @Test
+    void test_doPost_IncorrectPriceInRequest_ShouldThrowOrderCreationException() throws IOException, OrderCreationException {
+        BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
+        PrintWriter printWriter = Mockito.mock(PrintWriter.class);
+
+        OrderCreationException ex = new OrderCreationException("Order cannot be created: " +
+                "incorrect price specified. price = -100");
+
+        Stream<String> str = "{\"userId\":1,\"securityId\":1,\"type\":\"sell\",\"price\":\"-100\",\"quantity\":\"10\"}".lines();
+        String json = "{\n";
+        json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
+        json += "}";
+
+        Order order = new Order();
+        order.setUserId(1);
+        order.setSecurityId(1);
+        order.setType(OrderType.SELL);
+        order.setPrice(-100);
+        order.setQuantity(10);
+
+        Mockito.when(request.getReader()).thenReturn(bufferedReader);
+        Mockito.when(bufferedReader.lines()).thenReturn(str);
+        Mockito.when(response.getWriter()).thenReturn(printWriter);
+        doThrow(ex).when(orderRepository).addOrder(order);
+
+        orderServlet.doPost(request, response);
+
+        verify(orderRepository, times(1)).addOrder(order);
+        assertThrows(OrderCreationException.class, () -> orderRepository.addOrder(order));
+        verify(response, times(1)).setStatus(400);
+        verify(printWriter,times(1)).println(json);
+    }
 
     @Test
     void test_doGet_WhenOrderWithGivenIdExists() throws OrderNotExistException, ServletException, IOException {
