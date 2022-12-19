@@ -37,7 +37,6 @@ public class UserServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        super.doPost(request, response);
 
         StringBuilder body = new StringBuilder();
         char[] buffer = new char[1024];
@@ -69,7 +68,6 @@ public class UserServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        super.doGet(request, response);
 
         Long userId = Long.parseLong(request.getPathInfo().substring(1));
 

@@ -42,16 +42,7 @@ public class OrderServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        StringBuilder body = new StringBuilder();
-        char[] buffer = new char[1024];
-        int readChars;
-        try (Reader reader = request.getReader()) {
-            while ((readChars = reader.read(buffer)) != -1) {
-                body.append(buffer, 0, readChars);
-            }
-        }
-
-
+        StringBuilder body = convert(request);
         String orderStr = body.toString();
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
@@ -71,9 +62,20 @@ public class OrderServlet extends HttpServlet {
         }
     }
 
+    private static StringBuilder convert(HttpServletRequest request) throws IOException {
+        StringBuilder body = new StringBuilder();
+        char[] buffer = new char[1024];
+        int readChars;
+        try (Reader reader = request.getReader()) {
+            while ((readChars = reader.read(buffer)) != -1) {
+                body.append(buffer, 0, readChars);
+            }
+        }
+        return body;
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        super.doGet(request, response);
 
         Long orderId = Long.parseLong(request.getPathInfo().substring(1));
 
@@ -102,11 +104,3 @@ public class OrderServlet extends HttpServlet {
 }
 
 
-
-
-/*
- * new order: {domain}/orders
- * new user: {domain}/users
- * new security: {domain}/securities
- * trade: POST?
- * */
