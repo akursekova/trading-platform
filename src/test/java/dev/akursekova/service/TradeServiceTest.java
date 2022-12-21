@@ -188,6 +188,4 @@ class TradeServiceTest {
         tradeService.trade(buyOrder);
         assertEquals(0, tradeRepository.getAllTrades().size());
     }
-
-
 }
