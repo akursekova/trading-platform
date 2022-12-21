@@ -1,6 +1,6 @@
 package dev.akursekova.exception;
 
-public class TradeCreationException extends Exception{
+public class TradeCreationException extends Exception {
     public TradeCreationException() {
     }
 

@@ -50,11 +50,10 @@ public class SecurityRepository implements SecurityRepositoryInterface {
     }
 
     @Override
-    public Collection<Security> getAllSecurities(){
+    public Collection<Security> getAllSecurities() {
         return securities.values();
     }
 
-    //    @Override //todo investigate
     private boolean exists(Security security) {
         return !securities
                 .values()

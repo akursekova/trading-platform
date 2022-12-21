@@ -1,7 +1,6 @@
-package dev.akursekova.exception;
+package dev.akursekova.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.akursekova.dto.CreatedUserDto;
 import dev.akursekova.dto.ErrorMessageDto;
 
 import javax.servlet.ServletException;

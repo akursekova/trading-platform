@@ -2,15 +2,11 @@ package dev.akursekova.servlet;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.akursekova.dto.CreatedUserDto;
 import dev.akursekova.entities.Security;
-import dev.akursekova.exception.SecurityCreationException;
-import dev.akursekova.exception.SecurityNotExistException;
 import dev.akursekova.repository.SecurityRepositoryInterface;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONObject;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -19,7 +15,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.stream.Collectors;
 
 @WebServlet(name = "SecurityServlet", value = "/securities/*")

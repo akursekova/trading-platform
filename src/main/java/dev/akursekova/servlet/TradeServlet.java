@@ -2,12 +2,10 @@ package dev.akursekova.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akursekova.entities.Trade;
-import dev.akursekova.exception.TradeNotExistException;
 import dev.akursekova.repository.TradeRepositoryInterface;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONObject;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -16,7 +14,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 @WebServlet(name = "TradeServlet", value = "/trades/*")
 public class TradeServlet extends HttpServlet {
@@ -44,7 +41,5 @@ public class TradeServlet extends HttpServlet {
         response.getWriter().println(tradeAsJson);
 
         LOG.debug("Requested Trade with id = " + tradeId + ": " + "\n" + tradeAsJson);
-
-
     }
 }

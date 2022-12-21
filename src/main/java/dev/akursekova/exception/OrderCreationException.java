@@ -1,6 +1,6 @@
 package dev.akursekova.exception;
 
-public class OrderCreationException extends Exception{
+public class OrderCreationException extends Exception {
     public OrderCreationException() {
     }
 

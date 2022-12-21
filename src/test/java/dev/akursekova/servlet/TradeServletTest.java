@@ -3,7 +3,6 @@ package dev.akursekova.servlet;
 import dev.akursekova.entities.Trade;
 import dev.akursekova.exception.TradeNotExistException;
 import dev.akursekova.repository.TradeRepository;
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -36,6 +34,8 @@ class TradeServletTest {
     ServletConfig servletConfig;
     @Mock
     TradeRepository tradeRepository;
+    @Mock
+    PrintWriter printWriter;
 
     TradeServlet tradeServlet;
 
@@ -43,7 +43,6 @@ class TradeServletTest {
     void setup() throws ServletException {
         Mockito.when(servletConfig.getServletContext()).thenReturn(servletContext);
         Mockito.when(servletContext.getAttribute("tradeRepository")).thenReturn(tradeRepository);
-
 
         tradeServlet = new TradeServlet();
         tradeServlet.init(servletConfig);
@@ -57,33 +56,15 @@ class TradeServletTest {
         Trade trade = new Trade(1L, 2L, 50, 100);
         trade.setId(tradeId);
 
+        String tradeAsJson = "{\"id\":1,\"sellOrderId\":1,\"buyOrderId\":2,\"price\":50,\"quantity\":100}";
 
         Mockito.when(tradeRepository.getTrade(tradeId)).thenReturn(trade);
+        Mockito.when(response.getWriter()).thenReturn(printWriter);
 
         tradeServlet.doGet(request, response);
 
         verify(response, times(1)).setStatus(202);
-    }
-
-    @Test
-    void test_doGet_WhenTradeWithGivenIdDoesNotExist() throws TradeNotExistException, IOException, ServletException {
-        PrintWriter printWriter = Mockito.mock(PrintWriter.class);
-
-        Mockito.when(request.getPathInfo()).thenReturn("/1");
-        Long tradeId = 1L;
-        TradeNotExistException ex = new TradeNotExistException("Trade with given id = 1 doesn't exist");
-
-        Mockito.when(tradeRepository.getTrade(tradeId)).thenThrow(ex);
-        Mockito.when(response.getWriter()).thenReturn(printWriter);
-
-        String json = "{\n";
-        json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
-        json += "}";
-
-        tradeServlet.doGet(request, response);
-
-        assertThrows(TradeNotExistException.class, () -> tradeRepository.getTrade(tradeId));
-        verify(printWriter, times(1)).println(json);
+        verify(printWriter,times(1)).println(tradeAsJson);
     }
 
 }

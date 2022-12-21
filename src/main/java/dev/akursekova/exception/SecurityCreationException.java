@@ -1,6 +1,6 @@
 package dev.akursekova.exception;
 
-public class SecurityCreationException extends Exception{
+public class SecurityCreationException extends Exception {
     public SecurityCreationException() {
     }
 

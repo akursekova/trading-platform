@@ -1,10 +1,8 @@
 package dev.akursekova.repository;
 
 import dev.akursekova.entities.Security;
-import dev.akursekova.entities.User;
 import dev.akursekova.exception.SecurityCreationException;
 import dev.akursekova.exception.SecurityNotExistException;
-import dev.akursekova.exception.UserNotExistException;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +33,7 @@ class SecurityRepositoryTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", "     "})
-    void test_addSecurity_UserNameIsBlank(String argument){
+    void test_addSecurity_UserNameIsBlank(String argument) {
         Security security = new Security();
         security.setName(argument);
         assertThrows(SecurityCreationException.class, () -> securityRepository.addSecurity(security));
@@ -59,7 +57,7 @@ class SecurityRepositoryTest {
 
     @SneakyThrows
     @Test
-    void test_getSecurity_WhenIdIsPresent(){
+    void test_getSecurity_WhenIdIsPresent() {
         Security expectedSecurity = securities.get(2L);
         assertEquals(expectedSecurity, securityRepository.getSecurity(2L));
     }

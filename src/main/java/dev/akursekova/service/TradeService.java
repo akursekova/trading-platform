@@ -20,8 +20,8 @@ public class TradeService implements TradeServiceInterface {
 
     public TradeService(TradeRepositoryInterface tradeRepository,
                         OrderRepositoryInterface orderRepository) {
-        this.tradeRepository =  tradeRepository;
-        this.orderRepository =  orderRepository;
+        this.tradeRepository = tradeRepository;
+        this.orderRepository = orderRepository;
     }
 
 

@@ -5,6 +5,7 @@ import dev.akursekova.exception.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -40,5 +41,10 @@ public class TradeRepository implements TradeRepositoryInterface {
             throw new TradeNotExistException("trade with id = " + id + " doesn't exist");
         }
         return trades.get(id);
+    }
+
+    @Override
+    public Collection<Trade> getAllTrades() {
+        return trades.values();
     }
 }

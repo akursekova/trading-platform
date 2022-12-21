@@ -6,17 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akursekova.dto.CreatedOrderDto;
 import dev.akursekova.entities.Order;
 import dev.akursekova.entities.Trade;
-import dev.akursekova.exception.OrderCreationException;
-import dev.akursekova.exception.OrderNotExistException;
 import dev.akursekova.repository.OrderRepositoryInterface;
-import dev.akursekova.service.OrderService;
 import dev.akursekova.service.OrderServiceInterface;
-import dev.akursekova.service.TradeService;
 import dev.akursekova.service.TradeServiceInterface;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONObject;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -48,7 +43,7 @@ public class OrderServlet extends HttpServlet {
 
     @SneakyThrows
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
 
@@ -58,11 +53,13 @@ public class OrderServlet extends HttpServlet {
         try {
             order = objectMapper.readValue(orderStr, Order.class);
         } catch (JsonProcessingException e) {
+            response.setStatus(400);
+            response.getWriter().println("Order cannot be created: type is empty");
             LOG.error("Order cannot be created: type is empty");
-            throw new OrderCreationException("Order cannot be created: type is empty");
+            return;
         }
 
-        orderService.validateOrder(order);
+        orderService.validateAndCreateOrder(order);
         Trade trade = tradeService.trade(order);
         response.setStatus(202);
 

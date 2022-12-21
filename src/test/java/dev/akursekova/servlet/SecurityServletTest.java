@@ -4,7 +4,6 @@ import dev.akursekova.entities.Security;
 import dev.akursekova.exception.SecurityCreationException;
 import dev.akursekova.exception.SecurityNotExistException;
 import dev.akursekova.repository.SecurityRepository;
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +22,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +37,7 @@ class SecurityServletTest {
     @Mock
     SecurityRepository securityRepository;
     @Mock
+    PrintWriter printWriter;
     SecurityServlet securityServlet;
 
     @BeforeEach
@@ -51,7 +50,7 @@ class SecurityServletTest {
     }
 
     @Test
-    void test_doPost_SuccessfulSecurityCreation() throws SecurityCreationException, ServletException, IOException {
+    void test_doPost_SuccessfulSecurityCreation() throws SecurityCreationException, IOException {
         BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
 
         Stream<String> str = "{\"name\":\"WSB\"}".lines();
@@ -59,42 +58,17 @@ class SecurityServletTest {
         Security security = new Security();
         security.setName("WSB");
 
+        String securityAsJson = "{\"id\":0,\"name\":\"WSB\"}";
+
         Mockito.when(request.getReader()).thenReturn(bufferedReader);
         Mockito.when(bufferedReader.lines()).thenReturn(str);
+        Mockito.when(response.getWriter()).thenReturn(printWriter);
 
         securityServlet.doPost(request, response);
 
         verify(securityRepository, times(1)).addSecurity(security);
         verify(response, times(1)).setStatus(202);
-    }
-
-    @Test
-    void test_doPost_EmptyNameInRequest_ShouldThrowSecurityCreationException() throws ServletException, IOException, SecurityCreationException {
-        BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
-        PrintWriter printWriter = Mockito.mock(PrintWriter.class);
-
-        SecurityCreationException ex = new SecurityCreationException("empty security name");
-
-        Stream<String> str = "{\"name\":\"\"}".lines();
-
-        String json = "{\n";
-        json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
-        json += "}";
-
-        Security security = new Security();
-        security.setName("");
-
-        Mockito.when(request.getReader()).thenReturn(bufferedReader);
-        Mockito.when(bufferedReader.lines()).thenReturn(str);
-        Mockito.when(response.getWriter()).thenReturn(printWriter);
-        doThrow(ex).when(securityRepository).addSecurity(security);
-
-        securityServlet.doPost(request, response);
-
-        verify(securityRepository, times(1)).addSecurity(security);
-        assertThrows(SecurityCreationException.class, () -> securityRepository.addSecurity(security));
-        verify(response, times(1)).setStatus(400);
-        verify(printWriter, times(1)).println(json);
+        verify(printWriter, times(1)).println(securityAsJson);
     }
 
     @Test
@@ -106,31 +80,14 @@ class SecurityServletTest {
         security.setId(securityId);
         security.setName("WSB");
 
+        String securityAsJson = "{\"id\":1,\"name\":\"WSB\"}";
+
         Mockito.when(securityRepository.getSecurity(securityId)).thenReturn(security);
+        Mockito.when(response.getWriter()).thenReturn(printWriter);
 
         securityServlet.doGet(request, response);
 
         verify(response, times(1)).setStatus(202);
-    }
-
-    @Test
-    void test_doGet_WhenSecurityWithGivenIdDoesNotExist() throws SecurityNotExistException, IOException, ServletException {
-        PrintWriter printWriter = Mockito.mock(PrintWriter.class);
-
-        Mockito.when(request.getPathInfo()).thenReturn("/1");
-        Long securityId = 1L;
-        SecurityNotExistException ex = new SecurityNotExistException("Security with given id = 1 doesn't exist");
-
-        Mockito.when(securityRepository.getSecurity(securityId)).thenThrow(ex);
-        Mockito.when(response.getWriter()).thenReturn(printWriter);
-
-        String json = "{\n";
-        json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
-        json += "}";
-
-        securityServlet.doGet(request, response);
-
-        assertThrows(SecurityNotExistException.class, () -> securityRepository.getSecurity(securityId));
-        verify(printWriter, times(1)).println(json);
+        verify(printWriter, times(1)).println(securityAsJson);
     }
 }

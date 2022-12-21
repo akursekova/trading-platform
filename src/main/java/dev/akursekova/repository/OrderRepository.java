@@ -1,7 +1,6 @@
 package dev.akursekova.repository;
 
 import dev.akursekova.entities.Order;
-import dev.akursekova.exception.OrderCreationException;
 import dev.akursekova.exception.OrderNotExistException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

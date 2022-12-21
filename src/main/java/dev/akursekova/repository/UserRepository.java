@@ -56,7 +56,7 @@ public class UserRepository implements UserRepositoryInterface {
     }
 
     @Override
-    public Collection<User> getAllUsers(){
+    public Collection<User> getAllUsers() {
         return users.values();
     }
 

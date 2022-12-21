@@ -1,14 +1,15 @@
 package dev.akursekova.servlet;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import dev.akursekova.entities.Order;
 import dev.akursekova.entities.OrderType;
-import dev.akursekova.entities.Trade;
 import dev.akursekova.exception.OrderCreationException;
 import dev.akursekova.exception.OrderNotExistException;
 import dev.akursekova.repository.OrderRepository;
 import dev.akursekova.service.OrderService;
 import dev.akursekova.service.TradeService;
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,11 +43,12 @@ class OrderServletTest {
     ServletConfig servletConfig;
     @Mock
     OrderRepository orderRepository;
-
     @Mock
     OrderService orderService;
     @Mock
     TradeService tradeService;
+    @Mock
+    PrintWriter printWriter;
     OrderServlet orderServlet;
 
     @BeforeEach
@@ -63,10 +65,8 @@ class OrderServletTest {
     }
 
     @Test
-    void test_doPost_SuccessfulOrderCreation() throws ServletException, IOException, OrderCreationException {
+    void test_doPost_SuccessfulOrderCreation() throws IOException, OrderCreationException {
         BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
-        PrintWriter printWriter = Mockito.mock(PrintWriter.class);
-        Trade trade = Mockito.mock(Trade.class);
 
         Stream<String> str = "{\"userId\":1,\"securityId\":1,\"type\":\"sell\",\"price\":\"50\",\"quantity\":\"10\"}".lines();
 
@@ -80,52 +80,39 @@ class OrderServletTest {
         String createdOrderDto = "{\"order\":{\"id\":0,\"userId\":1,\"securityId\":1,\"type\":\"SELL\",\"price\":50," +
                 "\"quantity\":10,\"fulfilled\":\"NO\"},\"trade\":null}";
 
-
         Mockito.when(request.getReader()).thenReturn(bufferedReader);
         Mockito.when(bufferedReader.lines()).thenReturn(str);
         Mockito.when(response.getWriter()).thenReturn(printWriter);
         Mockito.when(tradeService.trade(order)).thenReturn(null);
 
+
         orderServlet.doPost(request, response);
 
-//        verify(orderRepository, times(1)).addOrder(order);
-        verify(orderService,times(1)).validateOrder(order);
-//        verify(tradeService, times(1)).trade(order);
+        verify(orderService, times(1)).validateAndCreateOrder(order);
         verify(response, times(1)).setStatus(202);
         verify(printWriter, times(1)).println(createdOrderDto);
     }
 
     @Test
-    void test_doPost_IncorrectPriceInRequest_ShouldThrowOrderCreationException() throws IOException, OrderCreationException {
+    void test_doPost_EmptyOrderTypeInRequest_ShouldThrowOrderCreationException() throws IOException, OrderCreationException {
         BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
-        PrintWriter printWriter = Mockito.mock(PrintWriter.class);
+        ObjectMapper objectMapper = Mockito.mock(ObjectMapper.class);
 
-        OrderCreationException ex = new OrderCreationException("Order cannot be created: " +
-                "incorrect price specified. price = -100");
+        String message = "Order cannot be created: type is empty";
 
-        Stream<String> str = "{\"userId\":1,\"securityId\":1,\"type\":\"sell\",\"price\":\"-100\",\"quantity\":\"10\"}".lines();
-        String json = "{\n";
-        json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
-        json += "}";
+        InvalidFormatException ex = Mockito.mock(InvalidFormatException.class);
 
-        Order order = new Order();
-        order.setUserId(1);
-        order.setSecurityId(1);
-        order.setType(OrderType.SELL);
-        order.setPrice(-100);
-        order.setQuantity(10);
+        String orderStr = "{\"userId\":1,\"securityId\":1,\"type\":\"\",\"price\":\"50\",\"quantity\":\"100\"}";
 
         Mockito.when(request.getReader()).thenReturn(bufferedReader);
-        Mockito.when(bufferedReader.lines()).thenReturn(str);
         Mockito.when(response.getWriter()).thenReturn(printWriter);
-        doThrow(ex).when(orderRepository).addOrder(order);
+        doThrow(ex).when(objectMapper).readValue(orderStr, Order.class);
 
         orderServlet.doPost(request, response);
 
-        verify(orderRepository, times(1)).addOrder(order);
-        assertThrows(OrderCreationException.class, () -> orderRepository.addOrder(order));
+        assertThrows(JsonProcessingException.class, () -> objectMapper.readValue(orderStr, Order.class));
         verify(response, times(1)).setStatus(400);
-        verify(printWriter, times(1)).println(json);
+        verify(printWriter, times(1)).println(message);
     }
 
     @Test
@@ -136,37 +123,21 @@ class OrderServletTest {
 
         Order order = new Order();
         order.setId(1);
+        order.setUserId(1);
         order.setSecurityId(1);
         order.setType(OrderType.SELL);
         order.setPrice(50);
         order.setQuantity(10);
 
+        String orderAsJson = "{\"id\":1,\"userId\":1,\"securityId\":1,\"type\":\"SELL\"," +
+                "\"price\":50,\"quantity\":10,\"fulfilled\":\"NO\"}";
+
         Mockito.when(orderRepository.getOrder(orderId)).thenReturn(order);
+        Mockito.when(response.getWriter()).thenReturn(printWriter);
 
         orderServlet.doGet(request, response);
 
         verify(response, times(1)).setStatus(202);
+        verify(printWriter, times(1)).println(orderAsJson);
     }
-
-    @Test
-    void test_doGet_WhenOrderWithGivenIdDoesNotExist() throws ServletException, IOException, OrderNotExistException {
-        PrintWriter printWriter = Mockito.mock(PrintWriter.class);
-
-        Mockito.when(request.getPathInfo()).thenReturn("/1");
-        Long orderId = 1L;
-        OrderNotExistException ex = new OrderNotExistException("order with id = 1 doesn't exist");
-
-        Mockito.when(orderRepository.getOrder(orderId)).thenThrow(ex);
-        Mockito.when(response.getWriter()).thenReturn(printWriter);
-
-        String json = "{\n";
-        json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
-        json += "}";
-
-        orderServlet.doGet(request, response);
-
-        assertThrows(OrderNotExistException.class, () -> orderRepository.getOrder(orderId));
-        verify(printWriter, times(1)).println(json);
-    }
-
 }

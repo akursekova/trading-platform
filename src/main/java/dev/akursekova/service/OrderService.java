@@ -7,12 +7,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class OrderService implements OrderServiceInterface {
     private static final Logger LOG = LogManager.getLogger(OrderService.class);
 
-//    private static AtomicLong orderId = new AtomicLong(0L);
     private final OrderRepositoryInterface orderRepository;
     private final UserRepositoryInterface userRepository;
     private final SecurityRepositoryInterface securityRepository;
@@ -26,7 +24,7 @@ public class OrderService implements OrderServiceInterface {
     }
 
     @Override
-    public void validateOrder(Order order) throws OrderCreationException {
+    public void validateAndCreateOrder(Order order) throws OrderCreationException {
         if (!userWithProvidedIdExist(order.getUserId())) {
             LOG.error("Order cannot be created: user with provided userId = '"
                     + order.getUserId() + "' doesn't exist");

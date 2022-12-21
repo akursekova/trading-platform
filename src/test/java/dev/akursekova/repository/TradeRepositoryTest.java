@@ -1,16 +1,13 @@
 package dev.akursekova.repository;
 
-import dev.akursekova.entities.Order;
-import dev.akursekova.entities.Security;
 import dev.akursekova.entities.Trade;
-import dev.akursekova.entities.User;
-import dev.akursekova.exception.SecurityNotExistException;
 import dev.akursekova.exception.TradeCreationException;
 import dev.akursekova.exception.TradeNotExistException;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,7 +39,7 @@ class TradeRepositoryTest {
     }
 
     @Test
-    void test_addTrade_BuyOrderAndSellOrderHaveSameId_ShouldThrowTradeCreationException(){
+    void test_addTrade_BuyOrderAndSellOrderHaveSameId_ShouldThrowTradeCreationException() {
         Trade trade = new Trade(1L, 1L, 50, 100);
         assertThrows(TradeCreationException.class, () -> tradeRepository.addTrade(trade));
     }
@@ -58,6 +55,12 @@ class TradeRepositoryTest {
     void test_getTrade_WhenIdIsNotPresent_ShouldThrowTradeNotExistException() {
         assertThrows(TradeNotExistException.class,
                 () -> tradeRepository.getTrade(1L));
+    }
+
+    @Test
+    void test_getAllTrades_ShouldReturnWholeCollection() {
+        Collection<Trade> expectedTrades = tradeRepository.trades.values();
+        assertEquals(expectedTrades, tradeRepository.getAllTrades());
     }
 
 }

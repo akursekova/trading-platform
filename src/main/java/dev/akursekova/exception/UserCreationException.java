@@ -1,6 +1,6 @@
 package dev.akursekova.exception;
 
-public class UserCreationException extends Exception{
+public class UserCreationException extends Exception {
     public UserCreationException() {
     }
 

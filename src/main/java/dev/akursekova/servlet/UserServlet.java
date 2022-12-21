@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akursekova.dto.CreatedUserDto;
 import dev.akursekova.entities.User;
-import dev.akursekova.exception.UserCreationException;
-import dev.akursekova.exception.UserNotExistException;
 import dev.akursekova.repository.UserRepositoryInterface;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
@@ -18,11 +16,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.Reader;
 import java.util.stream.Collectors;
-
-import org.json.JSONObject;
 
 @WebServlet(name = "UserServlet", value = "/users/*")
 public class UserServlet extends HttpServlet {

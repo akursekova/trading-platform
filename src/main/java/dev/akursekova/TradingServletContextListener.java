@@ -2,7 +2,6 @@ package dev.akursekova;
 
 import dev.akursekova.repository.*;
 import dev.akursekova.service.OrderService;
-import dev.akursekova.service.OrderServiceInterface;
 import dev.akursekova.service.TradeService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -13,6 +13,4 @@ public interface OrderRepositoryInterface {
     Order getOrder(Long id) throws OrderNotExistException;
 
     Collection<Order> getAllOrders();
-
-//    void showOrders();
 }

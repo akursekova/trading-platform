@@ -1,6 +1,5 @@
 package dev.akursekova.repository;
 
-import dev.akursekova.entities.Order;
 import dev.akursekova.entities.User;
 import dev.akursekova.exception.UserCreationException;
 import dev.akursekova.exception.UserNotExistException;
