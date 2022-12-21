@@ -6,7 +6,7 @@ import dev.akursekova.exception.SecurityNotExistException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -18,7 +18,7 @@ public class SecurityRepository implements SecurityRepositoryInterface {
     protected Map<Long, Security> securities;
     private static AtomicLong securityId = new AtomicLong(0L);
 
-    public SecurityRepository(Map<Long, Security> securities){
+    public SecurityRepository(Map<Long, Security> securities) {
         this.securities = securities;
     }
 
@@ -30,7 +30,7 @@ public class SecurityRepository implements SecurityRepositoryInterface {
             throw new SecurityCreationException("empty security name");
         }
 
-        if (exists(security)){
+        if (exists(security)) {
             LOG.error("Security with name = " + security.getName() + " already exists");
             throw new SecurityCreationException("Security with name = '" + security.getName() + "' already exists");
         }
@@ -49,8 +49,13 @@ public class SecurityRepository implements SecurityRepositoryInterface {
         return securities.get(id);
     }
 
-//    @Override //todo investigate
-    private boolean exists(Security security){
+    @Override
+    public Collection<Security> getAllSecurities(){
+        return securities.values();
+    }
+
+    //    @Override //todo investigate
+    private boolean exists(Security security) {
         return !securities
                 .values()
                 .stream()

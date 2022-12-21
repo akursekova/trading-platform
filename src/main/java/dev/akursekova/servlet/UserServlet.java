@@ -2,10 +2,12 @@ package dev.akursekova.servlet;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.akursekova.dto.CreatedUserDto;
 import dev.akursekova.entities.User;
 import dev.akursekova.exception.UserCreationException;
 import dev.akursekova.exception.UserNotExistException;
 import dev.akursekova.repository.UserRepositoryInterface;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,50 +38,45 @@ public class UserServlet extends HttpServlet {
         userRepository = (UserRepositoryInterface) context.getAttribute("userRepository");
     }
 
+    @SneakyThrows
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
+
         String orderStr = request.getReader().lines().collect(Collectors.joining());
+        User user = objectMapper.readValue(orderStr, User.class);
 
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
-        User user = mapper.readValue(orderStr, User.class);
+        userRepository.addUser(user);
+        response.setStatus(202);
 
-        try {
-            userRepository.addUser(user);
-            response.setStatus(202);
-        } catch (UserCreationException ex) {
-            String json = "{\n";
-            json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
-            json += "}";
-            response.setStatus(400);
-            response.getWriter().println(json);
-            System.out.println(json); // TODO testing purpose, remove it later
-        }
+        CreatedUserDto createdUserDto = CreatedUserDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .build();
+
+        String userAsJson = objectMapper.writeValueAsString(createdUserDto);
+        response.getWriter().println(userAsJson);
+
+        LOG.debug("User with id = " + user.getId() + " successfully created: " + "\n" + userAsJson);
     }
 
+    @SneakyThrows
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        ObjectMapper objectMapper = new ObjectMapper();
 
         Long userId = Long.parseLong(request.getPathInfo().substring(1));
 
-        try {
-            User user = userRepository.getUser(userId);
-            response.setStatus(202);
-            String json = "{\n";
-            json += "\"id\": " + JSONObject.quote(String.valueOf(user.getId())) + ",\n";
-            json += "\"username\": " + JSONObject.quote(user.getUsername()) + ",\n";
-            json += "\"password\": " + JSONObject.quote(user.getPassword()) + "\n";
-            json += "}";
-            System.out.println(json); // TODO testing purpose, remove it later
-        } catch (UserNotExistException ex) {
-            String json = "{\n";
-            json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
-            json += "}";
-            response.setStatus(400);
-            response.getWriter().println(json);
-            System.out.println(json); // TODO testing purpose, remove it later
-        }
+        User user = userRepository.getUser(userId);
+        response.setStatus(202);
+        CreatedUserDto createdUserDto = CreatedUserDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .build();
+        String userAsJson = objectMapper.writeValueAsString(createdUserDto);
+        response.getWriter().println(userAsJson);
 
-
+        LOG.debug("Requested User with id = " + userId + ": " + "\n" + userAsJson);
     }
 }

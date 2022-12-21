@@ -1,5 +1,6 @@
 package dev.akursekova.entities;
 
+import dev.akursekova.exception.UserCreationException;
 import lombok.Builder;
 import lombok.Data;
 
@@ -22,10 +23,10 @@ public class User {
     }
 
     public void setPassword(String password) {
-        this.password = hashPassword(password);
+        this.password = password;
     }
 
-    private String hashPassword(String password) {
+    public String hashPassword(String password) throws UserCreationException {
         String generatedPassword = null;
 
         try {

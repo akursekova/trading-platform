@@ -31,22 +31,22 @@ class OrderRepositoryTest {
         orders.put(2L, order);
     }
 
-    @ParameterizedTest
-    @ValueSource(ints = {0, -100})
-    void test_addOrder_QuantityLessThanOrEqualToZero_ShouldThrowOrderCreationException(int argument) {
-        Order order = new Order();
-        order.setQuantity(argument);
-        assertThrows(OrderCreationException.class, () -> orderRepository.addOrder(order));
-    }
+//    @ParameterizedTest
+//    @ValueSource(ints = {0, -100})
+//    void test_addOrder_QuantityLessThanOrEqualToZero_ShouldThrowOrderCreationException(int argument) {
+//        Order order = new Order();
+//        order.setQuantity(argument);
+//        assertThrows(OrderCreationException.class, () -> orderRepository.addOrder(order));
+//    }
 
-    @ParameterizedTest
-    @ValueSource(ints = {0, -100})
-    void test_addOrder_PriceLessThanOrEqualToZero_ShouldThrowOrderCreationException(int argument) {
-        Order order = new Order();
-        order.setQuantity(50);
-        order.setPrice(argument);
-        assertThrows(OrderCreationException.class, () -> orderRepository.addOrder(order));
-    }
+//    @ParameterizedTest
+//    @ValueSource(ints = {0, -100})
+//    void test_addOrder_PriceLessThanOrEqualToZero_ShouldThrowOrderCreationException(int argument) {
+//        Order order = new Order();
+//        order.setQuantity(50);
+//        order.setPrice(argument);
+//        assertThrows(OrderCreationException.class, () -> orderRepository.addOrder(order));
+//    }
 
     @SneakyThrows
     @Test
@@ -77,5 +77,4 @@ class OrderRepositoryTest {
         Collection<Order> expectedOrders = orderRepository.orders.values();
         assertEquals(expectedOrders, orderRepository.getAllOrders());
     }
-
 }

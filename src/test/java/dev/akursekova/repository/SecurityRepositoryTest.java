@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,6 +68,12 @@ class SecurityRepositoryTest {
     void test_getSecurity_WhenIdIsNotPresent_ShouldThrowSecurityNotExistException() {
         assertThrows(SecurityNotExistException.class,
                 () -> securityRepository.getSecurity(1L));
+    }
+
+    @Test
+    void test_getAllSecurities_ShouldReturnWholeCollection() {
+        Collection<Security> expectedSecurities = securityRepository.securities.values();
+        assertEquals(expectedSecurities, securityRepository.getAllSecurities());
     }
 
 }

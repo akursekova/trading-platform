@@ -11,71 +11,71 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Optional;
 
-public class TradeService {
+public class TradeService implements TradeServiceInterface {
 
     private static final Logger LOG = LogManager.getLogger(TradeService.class);
 
-    private final TradeRepository tradeRepository;
-    private final OrderRepository orderRepository;
+    private final TradeRepositoryInterface tradeRepository;
+    private final OrderRepositoryInterface orderRepository;
 
-    public TradeService(TradeRepositoryInterface tradeRepository, OrderRepositoryInterface orderRepository) {
-        this.tradeRepository = (TradeRepository) tradeRepository;
-        this.orderRepository = (OrderRepository) orderRepository;
+    public TradeService(TradeRepositoryInterface tradeRepository,
+                        OrderRepositoryInterface orderRepository) {
+        this.tradeRepository =  tradeRepository;
+        this.orderRepository =  orderRepository;
     }
 
 
+    @Override
     @SneakyThrows
-    public void trade(Order order) {
-        if (order.getType().equals(OrderType.BUY)) {
-            Optional<Order> matchingSellOrder = orderRepository.getAllOrders().stream()
-                    .filter(order1 -> order1.getType().equals(OrderType.SELL))
-                    .filter(order1 -> order1.getFulfilled()
-                            .equals(Fulfilled.NO) || order1.getFulfilled().equals(Fulfilled.PARTIALLY))
-                    .filter(order1 -> order1.getPrice() <= order.getPrice())
-                    .findFirst();
-            if (matchingSellOrder.isPresent()) {
-                Order sellOrder = matchingSellOrder.get();
-                int soldQuantity = Math.min(order.getQuantity(), sellOrder.getQuantity());
-                setFulfilled(sellOrder, order);
-                Trade trade = new Trade(sellOrder.getId(), order.getId(), order.getPrice(), soldQuantity);
-                tradeRepository.addTrade(trade);
-            }
+    public Trade trade(Order order) {
+        Optional<Order> possibleMatchingOrder = orderRepository.getAllOrders()
+                .stream()
+                .filter(order1 -> !order1.getType().equals(order.getType()))
+                .filter(order1 -> order1.getSecurityId() == order.getSecurityId())
+                .filter(order1 -> order1.getFulfilled().equals(Fulfilled.NO) || order1.getFulfilled().equals(Fulfilled.PARTIALLY))
+                .filter(order1 -> priceCoefficient(order) * (order.getPrice() - order1.getPrice()) >= 0)
+                .findFirst();
+
+        if (possibleMatchingOrder.isPresent()) {
+            Order matchingOrder = possibleMatchingOrder.get();
+
+            long sellOrderId = order.getType().equals(OrderType.SELL) ? order.getId() : matchingOrder.getId();
+            long buyOrderId = order.getType().equals(OrderType.BUY) ? order.getId() : matchingOrder.getId();
+            int soldQuantity = Math.min(order.getQuantity(), matchingOrder.getQuantity());
+            int sellPrice = Math.max(order.getPrice(), matchingOrder.getPrice());
+
+            setFulfilled(order, matchingOrder);
+            Trade trade = new Trade(sellOrderId, buyOrderId, sellPrice, soldQuantity);
+            return tradeRepository.addTrade(trade);
         } else {
-            Optional<Order> matchingBuyOrder = orderRepository.getAllOrders().stream()
-                    .filter(order1 -> order1.getType().equals(OrderType.BUY))
-                    .filter(order1 -> order1.getFulfilled()
-                            .equals(Fulfilled.NO) || order1.getFulfilled().equals(Fulfilled.PARTIALLY))
-                    .filter(order1 -> order1.getPrice() >= order.getPrice())
-                    .findFirst();
-            if (matchingBuyOrder.isPresent()) {
-                Order buyOrder = matchingBuyOrder.get();
-                int soldQuantity = Math.min(order.getQuantity(), buyOrder.getQuantity());
-                setFulfilled(order, buyOrder);
-                Trade trade = new Trade(order.getId(), buyOrder.getId(), order.getPrice(), soldQuantity);
-                tradeRepository.addTrade(trade);
-            }
+            return null;
         }
     }
 
-    private static void setFulfilled(Order sellOrder, Order buyOrder) {
-        if (sellOrder.getQuantity() - buyOrder.getQuantity() > 0) { // sellOrder q = 100 buyOrder q = 90
-            sellOrder.setFulfilled(Fulfilled.PARTIALLY);
-            buyOrder.setFulfilled(Fulfilled.YES);
-            sellOrder.setQuantity(sellOrder.getQuantity() - buyOrder.getQuantity());
-            LOG.debug("sell Order has been updated: " + sellOrder.toString());
-            LOG.debug("buy Order has been updated: " + buyOrder.toString());
-        } else if (sellOrder.getQuantity() - buyOrder.getQuantity() < 0) { // sellOrder q = 90 buyOrder q = 100
-            sellOrder.setFulfilled(Fulfilled.YES);
-            buyOrder.setFulfilled(Fulfilled.PARTIALLY);
-            buyOrder.setQuantity(buyOrder.getQuantity() - sellOrder.getQuantity());
-            LOG.debug("sell Order has been updated: " + sellOrder.toString());
-            LOG.debug("buy Order has been updated: " + buyOrder.toString());
+    private void setFulfilled(Order order, Order matchingOrder) {
+
+        if (order.getQuantity() > matchingOrder.getQuantity()) {
+            order.setFulfilled(Fulfilled.PARTIALLY);
+            matchingOrder.setFulfilled(Fulfilled.YES);
+            order.setQuantity(order.getQuantity() - matchingOrder.getQuantity());
+        } else if (order.getQuantity() < matchingOrder.getQuantity()) {
+            order.setFulfilled(Fulfilled.YES);
+            matchingOrder.setFulfilled(Fulfilled.PARTIALLY);
+            matchingOrder.setQuantity(matchingOrder.getQuantity() - order.getQuantity());
         } else {
-            sellOrder.setFulfilled(Fulfilled.YES);
-            buyOrder.setFulfilled(Fulfilled.YES);
-            LOG.debug("sell Order has been updated: " + sellOrder.toString());
-            LOG.debug("buy Order has been updated: " + buyOrder.toString());
+            order.setFulfilled(Fulfilled.YES);
+            matchingOrder.setFulfilled(Fulfilled.YES);
         }
+
+        LOG.debug("order with id = " + order.getId() + " has been updated: " + order.toString());
+        LOG.debug("order with id = " + matchingOrder.getId() + " has been updated: " + matchingOrder.toString());
     }
 
+    private int priceCoefficient(Order order) {
+        if (order.getType().equals(OrderType.SELL)) {
+            return -1;
+        } else {
+            return 1;
+        }
+    }
 }

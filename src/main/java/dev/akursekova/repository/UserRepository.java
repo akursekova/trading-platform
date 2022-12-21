@@ -6,7 +6,7 @@ import dev.akursekova.exception.UserNotExistException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -19,7 +19,7 @@ public class UserRepository implements UserRepositoryInterface {
 
     private static AtomicLong userId = new AtomicLong(0L);
 
-    public UserRepository(Map<Long, User> users){
+    public UserRepository(Map<Long, User> users) {
         this.users = users;
     }
 
@@ -39,7 +39,10 @@ public class UserRepository implements UserRepositoryInterface {
         }
 
         user.setId(userId.incrementAndGet());
+        user.setPassword(user.hashPassword(user.getPassword()));
+
         users.put(user.getId(), user);
+
         LOG.debug("New user created: " + user.toString());
     }
 
@@ -52,7 +55,12 @@ public class UserRepository implements UserRepositoryInterface {
         return users.get(id);
     }
 
-//    @Override //todo investigate
+    @Override
+    public Collection<User> getAllUsers(){
+        return users.values();
+    }
+
+
     private boolean exists(User user) {
         return !users.values()
                 .stream()

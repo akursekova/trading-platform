@@ -2,10 +2,12 @@ package dev.akursekova.servlet;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.akursekova.dto.CreatedUserDto;
 import dev.akursekova.entities.Security;
 import dev.akursekova.exception.SecurityCreationException;
 import dev.akursekova.exception.SecurityNotExistException;
 import dev.akursekova.repository.SecurityRepositoryInterface;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -18,7 +20,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.stream.Collectors;
 
 @WebServlet(name = "SecurityServlet", value = "/securities/*")
@@ -35,47 +36,35 @@ public class SecurityServlet extends HttpServlet {
         securityRepository = (SecurityRepositoryInterface) context.getAttribute("securityRepository");
     }
 
+    @SneakyThrows
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
+
         String orderStr = request.getReader().lines().collect(Collectors.joining());
+        Security security = objectMapper.readValue(orderStr, Security.class);
 
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
-        Security security = mapper.readValue(orderStr, Security.class);
+        securityRepository.addSecurity(security);
+        response.setStatus(202);
+        String securityAsJson = objectMapper.writeValueAsString(security);
+        response.getWriter().println(securityAsJson);
 
-        try {
-            securityRepository.addSecurity(security);
-            response.setStatus(202);
-        } catch (SecurityCreationException ex) {
-            String json = "{\n";
-            json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
-            json += "}";
-            response.setStatus(400);
-            response.getWriter().println(json);
-            System.out.println(json); // todo проверить выводится ли в консолько без этой строки
-        }
+        LOG.debug("Security with id = " + security.getId() + " successfully created: " + "\n" + securityAsJson);
     }
 
+    @SneakyThrows
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        ObjectMapper objectMapper = new ObjectMapper();
         Long securityId = Long.parseLong(request.getPathInfo().substring(1));
 
-        try {
-            Security security = securityRepository.getSecurity(securityId);
-            response.setStatus(202);
-            String json = "{\n";
-            json += "\"id\": " + JSONObject.quote(String.valueOf(security.getId())) + ",\n";
-            json += "\"name\": " + JSONObject.quote(security.getName()) + "\n";
-            json += "}";
-            System.out.println(json);
-        } catch (SecurityNotExistException ex) {
-            String json = "{\n";
-            json += "\"errorMessage\": " + JSONObject.quote(ex.getMessage()) + "\n";
-            json += "}";
-            response.setStatus(400);
-            response.getWriter().println(json);
-            System.out.println(json);
-        }
+        Security security = securityRepository.getSecurity(securityId);
+        response.setStatus(202);
+
+        String securityAsJson = objectMapper.writeValueAsString(security);
+        response.getWriter().println(securityAsJson);
+
+        LOG.debug("Requested Security with id = " + securityId + ": " + "\n" + securityAsJson);
     }
 }

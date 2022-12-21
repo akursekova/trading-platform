@@ -16,40 +16,16 @@ public class OrderRepository implements OrderRepositoryInterface {
     protected Map<Long, Order> orders;
     private static AtomicLong orderId = new AtomicLong(0L);
 
-    public OrderRepository(Map<Long, Order> orders){
+    public OrderRepository(Map<Long, Order> orders) {
         this.orders = orders;
     }
 
     @Override
-    public void addOrder(Order order) throws OrderCreationException {
-//        if (userWithProvidedIdDoesNotExist(order)){
-//            LOG.error("Order cannot be created: user with provided userId = '"
-//                    + order.getUserId() + "' doesn't exist");
-//            throw new OrderCreationException("Order cannot be created: user with provided userId = '"
-//                    + order.getUserId()
-//                    + "' doesn't exist");
-//        }
-//        if (securityWithProvidedIdDoesNotExist(order)){
-//            LOG.error("Order cannot be created: security with provided securityId = '"
-//                    + order.getUserId() + "' doesn't exist");
-//            throw new OrderCreationException("Order cannot be created: security with provided securityId = '"
-//                    + order.getUserId()
-//                    + "' doesn't exist");
-//        }
-        if (order.getQuantity() <= 0) {
-            LOG.error("Order cannot be created: incorrect quantity specified. quantity = " + order.getQuantity());
-            throw new OrderCreationException("Order cannot be created: incorrect quantity specified. quantity = "
-                    + order.getQuantity());
-        }
-        if (order.getPrice() <= 0) {
-            LOG.error("Order cannot be created: incorrect price specified. price = " + order.getPrice());
-            throw new OrderCreationException("Order cannot be created: incorrect price specified. price = "
-                    + order.getPrice());
-        }
+    public void addOrder(Order order) {
         order.setId(orderId.incrementAndGet());
         orders.put(order.getId(), order);
-        LOG.debug("New Order created: " + order.toString());
 
+        LOG.debug("New Order created: " + order.toString());
     }
 
     @Override
@@ -61,24 +37,8 @@ public class OrderRepository implements OrderRepositoryInterface {
         return orders.get(id);
     }
 
-//    private boolean userWithProvidedIdDoesNotExist(Order order) {
-//        // todo to handle situation when POST request has userID which doesn't exist in the system
-//        return  false;
-//    }
-//
-//    private boolean securityWithProvidedIdDoesNotExist(Order order) {
-//        // todo to handle situation when POST request has securityId which doesn't exist in the system
-//        return false;
-//    }
-
-//    @Override
-//    public void showOrders(){
-//        for (Map.Entry<Long, Order> entry : orders.entrySet()) {
-//            System.out.println(entry.getKey() + ":" + entry.getValue());
-//        }
-//    }
-
-    public Collection<Order> getAllOrders(){
+    @Override
+    public Collection<Order> getAllOrders() {
         return orders.values();
     }
 }

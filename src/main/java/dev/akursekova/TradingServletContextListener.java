@@ -1,6 +1,8 @@
 package dev.akursekova;
 
 import dev.akursekova.repository.*;
+import dev.akursekova.service.OrderService;
+import dev.akursekova.service.OrderServiceInterface;
 import dev.akursekova.service.TradeService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,7 +35,6 @@ public class TradingServletContextListener implements ServletContextListener {
         context.setAttribute("orderRepository", orderRepository);
         LOG.info("orderRepository has been created: " + orderRepository);
 
-
         TradeRepositoryInterface tradeRepository = new TradeRepository(new HashMap<>());
         context.setAttribute("tradeRepository", tradeRepository);
         LOG.info("tradeRepository has been created: " + tradeRepository);
@@ -41,5 +42,7 @@ public class TradingServletContextListener implements ServletContextListener {
         TradeService tradeService = new TradeService(tradeRepository, orderRepository);
         context.setAttribute("tradeService", tradeService);
 
+        OrderService orderService = new OrderService(orderRepository, userRepository, securityRepository);
+        context.setAttribute("orderService", orderService);
     }
 }

@@ -1,11 +1,8 @@
 package dev.akursekova.servlet;
 
 import dev.akursekova.entities.Trade;
-import dev.akursekova.entities.User;
 import dev.akursekova.exception.TradeNotExistException;
-import dev.akursekova.exception.UserNotExistException;
 import dev.akursekova.repository.TradeRepository;
-import dev.akursekova.repository.UserRepository;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

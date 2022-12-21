@@ -1,5 +1,6 @@
 package dev.akursekova.repository;
 
+import dev.akursekova.entities.Order;
 import dev.akursekova.entities.User;
 import dev.akursekova.exception.UserCreationException;
 import dev.akursekova.exception.UserNotExistException;
@@ -9,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,6 +25,12 @@ class UserRepositoryTest {
 
     @BeforeEach
     void setup() {
+        //todo  вместо , использую рефлексию
+        /*
+        Field usersField = userRepository.getClass().getDeclaredField("users");
+        usersField.setAccessible(true);
+        Map<Long, User> usersValues = (Map<Long, User>) usersField.get(userRepository); //todo
+        * */
         users = new HashMap<>();
         this.userRepository = new UserRepository(users);
 
@@ -58,7 +67,11 @@ class UserRepositoryTest {
         User user = new User(1L, "name3", "pswd3");
         user.setId(3L);
         userRepository.addUser(user);
-        assertEquals(3, userRepository.users.size());
+
+        Field usersField = userRepository.getClass().getDeclaredField("users");
+        usersField.setAccessible(true);
+        Map<Long, User> usersValues = (Map<Long, User>) usersField.get(userRepository); //todo
+        assertEquals(3, usersValues.size());
     }
 
     @SneakyThrows
@@ -72,6 +85,12 @@ class UserRepositoryTest {
     void test_getUser_WhenIdIsNotPresent_ShouldThrowUserNotExistException() {
         assertThrows(UserNotExistException.class,
                 () -> userRepository.getUser(1L));
+    }
+
+    @Test
+    void test_getAllUsers_ShouldReturnWholeCollection() {
+        Collection<User> expectedUsers = userRepository.users.values();
+        assertEquals(expectedUsers, userRepository.getAllUsers());
     }
 
 }

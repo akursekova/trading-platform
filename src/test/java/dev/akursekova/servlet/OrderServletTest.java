@@ -1,13 +1,13 @@
 package dev.akursekova.servlet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akursekova.entities.Order;
 import dev.akursekova.entities.OrderType;
+import dev.akursekova.entities.Trade;
 import dev.akursekova.exception.OrderCreationException;
 import dev.akursekova.exception.OrderNotExistException;
 import dev.akursekova.repository.OrderRepository;
+import dev.akursekova.service.OrderService;
 import dev.akursekova.service.TradeService;
-import lombok.SneakyThrows;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Reader;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,6 +42,9 @@ class OrderServletTest {
     ServletConfig servletConfig;
     @Mock
     OrderRepository orderRepository;
+
+    @Mock
+    OrderService orderService;
     @Mock
     TradeService tradeService;
     OrderServlet orderServlet;
@@ -52,15 +54,19 @@ class OrderServletTest {
         Mockito.when(servletConfig.getServletContext()).thenReturn(servletContext);
         Mockito.when(servletContext.getAttribute("orderRepository")).thenReturn(orderRepository);
         Mockito.when(servletContext.getAttribute("tradeService")).thenReturn(tradeService);
+        Mockito.when(servletContext.getAttribute("orderService")).thenReturn(orderService);
 
 
         orderServlet = new OrderServlet();
+
         orderServlet.init(servletConfig);
     }
 
     @Test
     void test_doPost_SuccessfulOrderCreation() throws ServletException, IOException, OrderCreationException {
         BufferedReader bufferedReader = Mockito.mock(BufferedReader.class);
+        PrintWriter printWriter = Mockito.mock(PrintWriter.class);
+        Trade trade = Mockito.mock(Trade.class);
 
         Stream<String> str = "{\"userId\":1,\"securityId\":1,\"type\":\"sell\",\"price\":\"50\",\"quantity\":\"10\"}".lines();
 
@@ -71,15 +77,22 @@ class OrderServletTest {
         order.setPrice(50);
         order.setQuantity(10);
 
+        String createdOrderDto = "{\"order\":{\"id\":0,\"userId\":1,\"securityId\":1,\"type\":\"SELL\",\"price\":50," +
+                "\"quantity\":10,\"fulfilled\":\"NO\"},\"trade\":null}";
+
 
         Mockito.when(request.getReader()).thenReturn(bufferedReader);
         Mockito.when(bufferedReader.lines()).thenReturn(str);
+        Mockito.when(response.getWriter()).thenReturn(printWriter);
+        Mockito.when(tradeService.trade(order)).thenReturn(null);
 
         orderServlet.doPost(request, response);
 
-        verify(orderRepository, times(1)).addOrder(order);
-        verify(tradeService, times(1)).trade(order);
+//        verify(orderRepository, times(1)).addOrder(order);
+        verify(orderService,times(1)).validateOrder(order);
+//        verify(tradeService, times(1)).trade(order);
         verify(response, times(1)).setStatus(202);
+        verify(printWriter, times(1)).println(createdOrderDto);
     }
 
     @Test
@@ -112,7 +125,7 @@ class OrderServletTest {
         verify(orderRepository, times(1)).addOrder(order);
         assertThrows(OrderCreationException.class, () -> orderRepository.addOrder(order));
         verify(response, times(1)).setStatus(400);
-        verify(printWriter,times(1)).println(json);
+        verify(printWriter, times(1)).println(json);
     }
 
     @Test

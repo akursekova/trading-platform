@@ -1,14 +1,9 @@
 package dev.akursekova.servlet;
 
-import dev.akursekova.entities.Order;
-import dev.akursekova.entities.OrderType;
 import dev.akursekova.entities.Security;
-import dev.akursekova.exception.OrderCreationException;
 import dev.akursekova.exception.SecurityCreationException;
 import dev.akursekova.exception.SecurityNotExistException;
-import dev.akursekova.repository.OrderRepository;
 import dev.akursekova.repository.SecurityRepository;
-import dev.akursekova.service.TradeService;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
